@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fantasy Dress-Up — Choose Your Character</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #1a1025; color: #f0e8ff; min-height: 100vh; padding: 1.5rem 1rem 2rem; }
+  h1 { font-size: 22px; font-weight: 500; text-align: center; margin-bottom: 4px; color: #f0e8ff; }
+  .subtitle { font-size: 14px; color: #a890c8; text-align: center; margin-bottom: 1.5rem; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; max-width: 480px; margin: 0 auto; }
+  .card {
+    border: 1.5px solid #3d2060;
+    border-radius: 14px;
+    padding: 14px 10px 12px;
+    background: #241535;
+    cursor: pointer;
+    text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  }
+  .card:active { transform: scale(0.97); }
+  .card.selected { border-width: 2px; }
+  .card svg { display: block; }
+  .card-name { font-size: 14px; font-weight: 500; }
+  .card-desc { font-size: 12px; color: #a890c8; line-height: 1.4; }
+  .btn-row { margin-top: 1.5rem; display: flex; justify-content: center; max-width: 480px; margin-left: auto; margin-right: auto; }
+  button.next {
+    font-size: 15px; font-weight: 500;
+    padding: 12px 36px;
+    border-radius: 14px;
+    border: 1.5px solid #5a3a8a;
+    background: #2e1a50;
+    color: #f0e8ff;
+    cursor: pointer;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+    width: 100%;
+    max-width: 300px;
+  }
+  button.next.active { opacity: 1; background: #5a3a8a; }
+</style>
+</head>
+<body>
+<h1>Choose your character</h1>
+<p class="subtitle">Who will you be in the realm?</p>
+<div class="grid" id="grid"></div>
+<div class="btn-row"><button class="next" id="nextBtn" disabled>Continue →</button></div>
+
+<script>
+const races = [
+  { id:'human', name:'Human', desc:'Brave adventurer from the kingdom', accent:'#378ADD', accentBg:'#0d2a4a', textCol:'#7ec8f8',
+    draw:()=>`<ellipse cx="44" cy="28" rx="18" ry="20" fill="#F5C9A0"/><ellipse cx="44" cy="14" rx="19" ry="12" fill="#5C3317"/><circle cx="38" cy="30" r="2.5" fill="#2C1810"/><circle cx="50" cy="30" r="2.5" fill="#2C1810"/><path d="M40 38 Q44 42 48 38" stroke="#2C1810" stroke-width="1.5" fill="none" stroke-linecap="round"/><rect x="26" y="46" width="36" height="28" rx="5" fill="#378ADD"/><rect x="14" y="48" width="13" height="22" rx="6" fill="#F5C9A0"/><rect x="61" y="48" width="13" height="22" rx="6" fill="#F5C9A0"/>`},
+  { id:'elf', name:'Elf', desc:'Graceful guardian of the forest', accent:'#3B6D11', accentBg:'#1a3008', textCol:'#8fd44a',
+    draw:()=>`<ellipse cx="44" cy="28" rx="18" ry="20" fill="#E8D5B0"/><ellipse cx="44" cy="14" rx="19" ry="12" fill="#C8A96E"/><path d="M26 22 Q18 10 22 4 Q28 18 30 22Z" fill="#E8D5B0" stroke="#C8A96E" stroke-width="0.5"/><path d="M62 22 Q70 10 66 4 Q60 18 58 22Z" fill="#E8D5B0" stroke="#C8A96E" stroke-width="0.5"/><circle cx="38" cy="30" r="2.5" fill="#2C5010"/><circle cx="50" cy="30" r="2.5" fill="#2C5010"/><path d="M40 38 Q44 42 48 38" stroke="#2C5010" stroke-width="1.5" fill="none" stroke-linecap="round"/><rect x="26" y="46" width="36" height="28" rx="5" fill="#3B6D11"/><rect x="14" y="48" width="13" height="22" rx="6" fill="#E8D5B0"/><rect x="61" y="48" width="13" height="22" rx="6" fill="#E8D5B0"/>`},
+  { id:'fairy', name:'Fairy', desc:'Tiny spark of pure magic', accent:'#D4537E', accentBg:'#3d0f22', textCol:'#f4a0c0',
+    draw:()=>`<ellipse cx="44" cy="56" rx="16" ry="18" fill="#F5C9A0"/><ellipse cx="44" cy="44" rx="17" ry="10" fill="#E8A0C0"/><path d="M28 50 Q10 36 14 24 Q24 40 32 50Z" fill="#F4C0D1" opacity="0.85"/><path d="M60 50 Q78 36 74 24 Q64 40 56 50Z" fill="#F4C0D1" opacity="0.85"/><path d="M30 52 Q16 44 20 36 Q28 46 34 52Z" fill="#ED93B1" opacity="0.6"/><path d="M58 52 Q72 44 68 36 Q60 46 54 52Z" fill="#ED93B1" opacity="0.6"/><circle cx="39" cy="58" r="2" fill="#2C1810"/><circle cx="49" cy="58" r="2" fill="#2C1810"/><path d="M41 64 Q44 67 47 64" stroke="#2C1810" stroke-width="1.2" fill="none" stroke-linecap="round"/><rect x="28" y="72" width="32" height="22" rx="5" fill="#D4537E"/><rect x="18" y="74" width="11" height="18" rx="5" fill="#F5C9A0"/><rect x="59" y="74" width="11" height="18" rx="5" fill="#F5C9A0"/>`},
+  { id:'witch', name:'Witch', desc:'Master of spells and potions', accent:'#7F77DD', accentBg:'#1a1550', textCol:'#c0b8f8',
+    draw:()=>`<ellipse cx="44" cy="38" rx="18" ry="20" fill="#F5C9A0"/><path d="M22 26 L44 0 L66 26 L60 28 Q44 20 28 28Z" fill="#3C3489"/><ellipse cx="44" cy="28" rx="24" ry="5" fill="#26215C"/><circle cx="38" cy="40" r="2.5" fill="#2C1810"/><circle cx="50" cy="40" r="2.5" fill="#2C1810"/><path d="M40 48 Q44 52 48 48" stroke="#2C1810" stroke-width="1.5" fill="none" stroke-linecap="round"/><rect x="26" y="56" width="36" height="24" rx="5" fill="#7F77DD"/><rect x="14" y="58" width="13" height="20" rx="6" fill="#F5C9A0"/><rect x="61" y="58" width="13" height="20" rx="6" fill="#F5C9A0"/>`},
+  { id:'mermaid', name:'Mermaid', desc:'Ruler of the deep ocean', accent:'#1D9E75', accentBg:'#0a3028', textCol:'#5de0b8',
+    draw:()=>`<ellipse cx="44" cy="26" rx="18" ry="20" fill="#F5C9A0"/><ellipse cx="44" cy="12" rx="19" ry="12" fill="#4AB8A0"/><circle cx="38" cy="28" r="2.5" fill="#0F4035"/><circle cx="50" cy="28" r="2.5" fill="#0F4035"/><path d="M40 36 Q44 40 48 36" stroke="#0F4035" stroke-width="1.5" fill="none" stroke-linecap="round"/><rect x="28" y="44" width="32" height="20" rx="5" fill="#1D9E75"/><rect x="18" y="46" width="11" height="18" rx="5" fill="#F5C9A0"/><rect x="59" y="46" width="11" height="18" rx="5" fill="#F5C9A0"/><path d="M28 62 Q24 76 20 84 Q28 80 36 84 Q44 76 44 68Z" fill="#1D9E75"/><path d="M60 62 Q64 76 68 84 Q60 80 52 84 Q44 76 44 68Z" fill="#0F6E56"/><path d="M30 70 Q36 74 44 72 Q52 74 58 70" stroke="#5DCAA5" stroke-width="1" fill="none"/>`},
+  { id:'dragon', name:'Dragon-kin', desc:'Ancient power in mortal form', accent:'#D85A30', accentBg:'#3d1408', textCol:'#f4906a',
+    draw:()=>`<ellipse cx="44" cy="28" rx="18" ry="20" fill="#C97B50"/><ellipse cx="44" cy="14" rx="19" ry="11" fill="#B05C30"/><path d="M26 14 Q20 4 24 0 Q28 8 30 16Z" fill="#D85A30"/><path d="M62 14 Q68 4 64 0 Q60 8 58 16Z" fill="#D85A30"/><circle cx="38" cy="30" r="3" fill="#8B2000"/><circle cx="50" cy="30" r="3" fill="#8B2000"/><path d="M40 38 Q44 41 48 38" stroke="#8B2000" stroke-width="1.5" fill="none" stroke-linecap="round"/><rect x="26" y="46" width="36" height="28" rx="5" fill="#D85A30"/><rect x="14" y="48" width="13" height="22" rx="6" fill="#C97B50"/><rect x="61" y="48" width="13" height="22" rx="6" fill="#C97B50"/><path d="M76 34 Q86 20 80 10 Q74 24 72 34Z" fill="#D85A30" opacity="0.8"/>`},
+  { id:'animal', name:'Animal hybrid', desc:'Part beast, part legend', accent:'#BA7517', accentBg:'#352005', textCol:'#f0b060',
+    draw:()=>`<ellipse cx="44" cy="30" rx="20" ry="22" fill="#D4A86A"/><ellipse cx="30" cy="12" rx="9" ry="11" fill="#D4A86A"/><ellipse cx="58" cy="12" rx="9" ry="11" fill="#D4A86A"/><ellipse cx="30" cy="11" rx="5" ry="7" fill="#F4C0D1"/><ellipse cx="58" cy="11" rx="5" ry="7" fill="#F4C0D1"/><ellipse cx="44" cy="36" rx="10" ry="7" fill="#C49055"/><circle cx="38" cy="28" r="3" fill="#4A2C10"/><circle cx="50" cy="28" r="3" fill="#4A2C10"/><ellipse cx="44" cy="36" rx="4" ry="3" fill="#C07878"/><path d="M38 42 Q44 47 50 42" stroke="#4A2C10" stroke-width="1.5" fill="none" stroke-linecap="round"/><rect x="26" y="50" width="36" height="26" rx="5" fill="#BA7517"/><rect x="14" y="52" width="13" height="20" rx="6" fill="#D4A86A"/><rect x="61" y="52" width="13" height="20" rx="6" fill="#D4A86A"/><path d="M44 74 Q48 84 44 90 Q40 84 44 74Z" fill="#D4A86A"/>`},
+];
+
+let selected = null;
+
+function render() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  races.forEach(r => {
+    const svgH = r.id === 'fairy' ? 100 : r.id === 'mermaid' ? 94 : r.id === 'animal' ? 96 : 88;
+    const card = document.createElement('div');
+    card.className = 'card' + (selected === r.id ? ' selected' : '');
+    if (selected === r.id) {
+      card.style.borderColor = r.accent;
+      card.style.background = r.accentBg;
+    }
+    card.innerHTML = `
+      <svg width="88" height="${svgH}" viewBox="0 0 88 ${svgH}">${r.draw()}</svg>
+      <div class="card-name" style="color:${selected===r.id ? r.textCol : '#f0e8ff'}">${r.name}</div>
+      <div class="card-desc">${r.desc}</div>
+    `;
+    card.onclick = () => { selected = r.id; render(); document.getElementById('nextBtn').classList.add('active'); document.getElementById('nextBtn').disabled = false; };
+    grid.appendChild(card);
+  });
+}
+
+document.getElementById('nextBtn').onclick = () => {
+  const r = races.find(x => x.id === selected);
+  if (r) alert('Selected: ' + r.name + '!\n\n(Next: gender & body type selection)');
+};
+
+render();
+</script>
+</body>
+</html>
